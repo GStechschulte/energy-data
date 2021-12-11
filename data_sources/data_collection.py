@@ -1,7 +1,10 @@
 import requests
 import json
 import pandas as pd
-import time
+import typing_extensions
+import sys
+from sqlalchemy import create_engine
+import mysql.connector
 
 class get_data():
 
@@ -11,12 +14,21 @@ class get_data():
 
     def energy_generation(self, start):
         """
-        This function. . .
+        This function fetches hydro, solar, and wind energy production from the 
+        state of California and processes the JSON format into a pandas dataframe
+        with respective columns and data types.
+
+        parameters:
+            self:energy_key = api key
+            start = start date to fetch data from
         """
 
-        hydro_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.WAT.H&start={}'.format(self.energy_key, start)
-        solar_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.SUN.H&start={}'.format(self.energy_key, start)
-        wind_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.WND.H&start={}'.format(self.energy_key, start)
+        hydro_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.WAT.H&start={}'.format(
+            self.energy_key, start)
+        solar_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.SUN.H&start={}'.format(
+            self.energy_key, start)
+        wind_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.WND.H&start={}'.format(
+            self.energy_key, start)
 
         hydro_response = requests.post(hydro_url).json()
         solar_response = requests.post(solar_url).json()
@@ -46,11 +58,12 @@ class get_data():
         energy = requests.post(url).json()
         data = dict(energy['series'][0]['data'])
 
-        demand = pd.DataFrame.from_dict(data, orient='index', columns=['demand_MWh'])
+        demand = pd.DataFrame.from_dict(data, orient='index', columns=['MWh'])
         demand.index = pd.to_datetime(demand.index, utc=True)
+        demand.reset_index(inplace=True)
+        demand.rename(columns={'index': 'date_ts'}, inplace=True)
 
         return demand
-
 
     def hydro_weather(self):
 
@@ -64,7 +77,6 @@ class get_data():
                 response = requests.get(url)
                 city_weather = json.loads(response.text)
                 hydro_weather[city] = city_weather
-                #time.sleep(30)
         
         return hydro_weather
     
@@ -81,7 +93,6 @@ class get_data():
             response = requests.get(url)
             city_weather = json.loads(response.text)
             wind_weather[city] = city_weather
-            #time.sleep(30)
         
         return wind_weather
     
@@ -98,23 +109,27 @@ class get_data():
             response = requests.get(url)
             city_weather = json.loads(response.text)
             solar_weather[city] = city_weather
-            #time.sleep(30)
         
         return solar_weather
         
-        
-
 
 if __name__ == '__main__':
 
-    load = get_data('2f13235137d441c33ec363a5d85a86cb', '9ea3a7cd842bc24bd99785092ce3342e')
-    energy_generation = load.energy_generation('20191018T07Z')
-    energy_demand = load.energy_demand('20191018T07Z')
+    # Create an engine to the DB
+    engine = create_engine(
+        'mysql+mysqlconnector://admin:energy2021!@database-1.canx610strnv.us-east-1.rds.amazonaws.com/energy'
+        )
+
+    # Fetch energy demand and generation data
+    load = get_data('cfc655e7e0bb8f38367dc611a0da9409', '9ea3a7cd842bc24bd99785092ce3342e')
+    energy_generation = load.energy_generation('20211001T07Z')
+    energy_demand = load.energy_demand('20211001T07Z')
 
     print(energy_generation.head(), '\n')
     print(25*'-', '\n')
     print(energy_demand.head())
-
+    
+    # Fetch weather data
     hydro = load.hydro_weather()
     wind = load.wind_weather()
     solar = load.solar_weather()
@@ -125,4 +140,6 @@ if __name__ == '__main__':
     print(25*'-', '\n')
     print(solar)
 
+    # Load demand data into DB table
+    energy_demand.to_sql('demand_dev', con=engine, if_exists='replace')
     
