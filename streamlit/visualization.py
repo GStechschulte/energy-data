@@ -1,5 +1,7 @@
 
 import os, sys, json, time
+from os import listdir
+from os.path import isfile, join
 
 import numpy as np
 import pandas as pd
@@ -31,7 +33,7 @@ def data_loader(timestamp):
         engine,connection,metadata = aws_connection.connect()
         return {table:pd.read_sql(f"SELECT * FROM {table}", engine) for table in aws_connection.tables}, list(aws_connection.tables)
 
-# Creates a list of values
+# Creates a list of values in html format
 def create_list(elements):
     # Creating a list of values
     prefix_ul = '<ul>'
@@ -73,15 +75,6 @@ def create_footer():
     """
     return st.markdown(footer,unsafe_allow_html=True)
 
-# Create a pyplot 
-def create_plot(x,y,x_label:str,y_label:str,title:str):
-    plt.plot(x,y)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.show()
-    return st.pyplot()
-
 # create a overview chart 
 def create_overview():
     for key, value in names_dict.items():
@@ -96,14 +89,25 @@ def rolling(i, feature):
 ########## MAIN ##########
 df, tables = data_loader(today)
 
+path_local = os.chdir(os.path.dirname(os.path.abspath(__file__)))
+slides_dir = os.path.join(os.getcwd(),'img','presentation','final_presentation_II')
+slides = sorted([f for f in listdir(slides_dir) if isfile(join(slides_dir, f))])
+
 ###### Energy Overview (Balance)
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns([1, 3])
+with col1:
+    st.image(Image.open('./img/logo.jpeg'))
 with col2:
-    st.image(Image.open('./streamlit/img/logo.jpeg'))
+    for slide in slides[:1]:
+        st.image(Image.open(f'{os.path.join(slides_dir,slide)}'), use_column_width=True)
+ 
+for slide in slides[1:-1]:
+    st.image(Image.open(f'{os.path.join(slides_dir,slide)}'), use_column_width=True)
+
+# Dashboard starts here
 st.header('Energy Dashboard')
-st.text('This dashboard is a prototype of a dashboard that will be used to visualize energy data.')
 # Rolling mean slider
-rolling_mean = st.slider('Rolling mean value:', 1, len(df['generation_dev'][['index']]), 1)#round(max_moving_average/2))
+rolling_mean = st.slider('Rolling mean value:', 1, round(len(df['generation_dev'][['index']])/2), 1)#round(max_moving_average/2))
 
 ### Energy Generation
 col1, col2, col3 = st.columns(3)
@@ -112,17 +116,32 @@ with col1:
     df_generation_dev = (df['generation_dev'])
     df_concat = pd.concat(
             [
-                df_generation_dev[['index','hydro_MWh']].rename(columns={'hydro_MWh':'Generation','index':'Date'}).assign(Type='Hydro').assign(Generation = rolling(rolling_mean, 'Generation')),
-                df_generation_dev[['index','solar_MWh']].rename(columns={'solar_MWh':'Generation','index':'Date'}).assign(Type='Solar').assign(Generation = rolling(rolling_mean, 'Generation')),
-                df_generation_dev[['index','wind_MWh']].rename(columns={'wind_MWh':'Generation','index':'Date'}).assign(Type='Wind').assign(Generation = rolling(rolling_mean, 'Generation')),
+                (
+                    df_generation_dev[['index','hydro_MWh']]
+                    .rename(columns={'hydro_MWh':'Generation','index':'Date'})
+                    .assign(Type='Hydro')
+                    .assign(Generation = rolling(rolling_mean, 'Generation'))
+                    ),
+                (
+                    df_generation_dev[['index','solar_MWh']]
+                    .rename(columns={'solar_MWh':'Generation','index':'Date'})
+                    .assign(Type='Solar')
+                    .assign(Generation = rolling(rolling_mean, 'Generation'))
+                    ),
+                (
+                    df_generation_dev[['index','wind_MWh']]
+                    .rename(columns={'wind_MWh':'Generation','index':'Date'})
+                    .assign(Type='Wind')
+                    .assign(Generation = rolling(rolling_mean, 'Generation'))
+                    ),
             ]
         )
+    
     chart = alt.Chart(df_concat).mark_bar().encode(
         x="Date",
         y='sum(Generation)',
         color="Type")
     st.altair_chart(chart, use_container_width=True)
-    st.caption('*****ADD Description of Graph')
         
 ### Energy Demand
 with col2:
@@ -133,7 +152,6 @@ with col2:
                      .rolling(rolling_mean).mean()
                      )
     st.bar_chart(df_demand_dev)
-    st.caption('*****ADD Description of Graph')
 
 ### Energy Balance
 with col3:    
@@ -150,7 +168,6 @@ with col3:
             .drop(columns = ['hydro_MWh','solar_MWh','wind_MWh'])
             ).rolling(rolling_mean).mean()
     st.bar_chart(df_delta)
-    st.caption('*****ADD Description of Graph')
 
 ###### Energy Overview by Type
 text = 'Energy Overview by Type'
@@ -163,7 +180,6 @@ with col4:
                          .rolling(rolling_mean).mean()
                          )
     st.bar_chart(df_generation_dev)
-    st.caption('*****ADD Description of Graph')
     
 with col5:
     st.subheader(f'{text}: Solar')
@@ -173,7 +189,6 @@ with col5:
                          .rolling(rolling_mean).mean()
                          )
     st.bar_chart(df_generation_dev)
-    st.caption('*****ADD Description of Graph')
     
 with col6:
     st.subheader(f'{text}: Wind')
@@ -183,7 +198,6 @@ with col6:
                          .rolling(rolling_mean).mean()
                          )
     st.bar_chart(df_generation_dev)    
-    st.caption('*****ADD Description of Graph')
     
 ###### Energy Overview by Type and Location
 text = 'Energy Generation by Type and Location'
@@ -194,7 +208,10 @@ with col7:
                     .rename(columns = {'coord_lon':'lon','coord_lat':'lat'})                    
                     )
     st.map(df_hydro_dev)
-    st.caption('*****ADD Description of Graph')
+    st.subheader('Weather description per location:')
+    create_list(
+        [str(element[0]+' | Mostly observed weather condition: '+element[1]) for element in zip(list(df['hydro_dev']['name']),list(df['hydro_dev']['weather_0_main']))]
+        )
     
 with col8:
     st.subheader(f'{text}: Solar')
@@ -202,15 +219,24 @@ with col8:
                     .rename(columns = {'coord_lon':'lon','coord_lat':'lat'})                    
                     )
     st.map(df_solar_dev)
-    st.caption('*****ADD Description of Graph')
-    
+    st.subheader('Weather description per location:')
+    create_list(
+        [str(element[0]+' | Mostly observed weather condition: '+element[1]) for element in zip(list(df['solar_dev']['name']),list(df['solar_dev']['weather_0_main']))]
+        )
+        
 with col9:
     st.subheader(f'{text}: Wind')
     df_wind_dev = (df['wind_dev'][['coord_lon','coord_lat']]
                     .rename(columns = {'coord_lon':'lon','coord_lat':'lat'})                    
                     )
     st.map(df_wind_dev)
-    st.caption('*****ADD Description of Graph')
-    
+    st.subheader('Weather description per location:')
+    create_list(
+        [str(element[0]+' | Mostly observed weather condition: '+element[1]) for element in zip(list(df['wind_dev']['name']),list(df['wind_dev']['weather_0_main']))]
+        )
+  
+for slide in slides[-1:]:
+    st.image(Image.open(f'{os.path.join(slides_dir,slide)}'), use_column_width=True)
+  
 ### End of the dashboard
 create_footer()
