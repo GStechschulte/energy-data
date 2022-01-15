@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+streamlit/img/presentation/final_presentation_II/.DS_Store
+streamlit/img/presentation/final_presentation_II/old/.DS_Store
