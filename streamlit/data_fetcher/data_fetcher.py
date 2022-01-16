@@ -26,9 +26,6 @@ class DataFetcher:
     
     def connect(self):
         db_string = f"postgresql+psycopg2://{self.username}:{self.password}@{self.database}:{self.port}/{self.username}"
-        #engine = create_engine(
-    #    'postgresql+psycopg2://postgres:SwissAmerican2020@localhost/postgres'
-    #    )
         engine = db.create_engine(db_string)
         connection = engine.connect()
         metadata = db.MetaData(bind = connection)
