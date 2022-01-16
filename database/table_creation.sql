@@ -1,16 +1,10 @@
-CREATE TABLE IF NOT EXISTS energy.demand
+CREATE TABLE IF NOT EXISTS energy.demand_dev
 (
 	date_ts date NOT NULL,
 	MWh numeric DEFAULT NULL
 );
 
-CREATE TABLE IF NOT EXISTS energy.dev
-(
-	date_ts date NOT NULL,
-	MWh numeric DEFAULT NULL
-);
-
-CREATE TABLE IF NOT EXISTS energy.generation
+CREATE TABLE IF NOT EXISTS energy.generation_dev
 (
 	date_ts date NOT NULL,
 	hydro_MWh numeric DEFAULT NULL,
@@ -18,14 +12,101 @@ CREATE TABLE IF NOT EXISTS energy.generation
     wind_MWh numeric DEFAULT NULL
 );
 
--- To be completed once Ari transforms the weather data :)
-/*
-CREATE TABLE IF NOT EXISTS energy.weather
+CREATE TABLE IF NOT EXISTS energy.hydro_dev
 (
-	date_ts date NOT NULL,
+	coord_lon numeric DEFAULT NULL,
+	coord_lat numeric DEFAULT NULL,
+	weather_0_id numeric DEFAULT NULL,
+	weather_0_main char DEFAULT NULL,
+	weather_0_description char DEFAULT NULL,
+	weather_0_icon char DEFAULT NULL,
+	base char DEFAULT NULL,
+	main_temp numeric DEFAULT NULL,
+	main_feels_like numeric DEFAULT NULL,
+	main_temp_min numeric DEFAULT NULL,
+	main_temp_max numeric DEFAULT NULL,
+	main_pressure numeric DEFAULT NULL,
+	main_humidity numeric DEFAULT NULL,
+	visibility numeric DEFAULT NULL,
 	wind_speed numeric DEFAULT NULL,
-    cloud_cover numeric DEFAULT NULL,
-    precipitation numeric DEFAULT NULL,
+	wind_deg numeric DEFAULT NULL,
+	clouds_all numeric DEFAULT NULL,
+	dt numeric DEFAULT NULL,
+	sys_type numeric DEFAULT NULL,
+	sys_id numeric DEFAULT NULL,
+	sys_country char DEFAULT NULL,
+	sys_sunrise numeric DEFAULT NULL,
+	sys_sunset numeric DEFAULT NULL,
+	timezone numeric DEFAULT NULL,
+	id numeric DEFAULT NULL,
+	name char DEFAULT NULL,
+	cod numeric DEFAULT NULL,
+	main_sea_level numeric DEFAULT NULL,
+	main_grnd_level	wind_gust numeric DEFAULT NULL,
 );
-/*
 
+CREATE TABLE IF NOT EXISTS energy.solar_dev
+(
+	coord_lon numeric DEFAULT NULL,
+	coord_lat numeric DEFAULT NULL,
+	weather_0_id numeric DEFAULT NULL,
+	weather_0_main char DEFAULT NULL,
+	weather_0_description char DEFAULT NULL,
+	weather_0_icon char DEFAULT NULL,
+	base char DEFAULT NULL,
+	main_temp numeric DEFAULT NULL,
+	main_feels_like numeric DEFAULT NULL,
+	main_temp_min numeric DEFAULT NULL,
+	main_temp_max numeric DEFAULT NULL,
+	main_pressure numeric DEFAULT NULL,
+	main_humidity numeric DEFAULT NULL,
+	visibility numeric DEFAULT NULL,
+	wind_speed numeric DEFAULT NULL,
+	wind_deg numeric DEFAULT NULL,
+	clouds_all numeric DEFAULT NULL,
+	dt numeric DEFAULT NULL,
+	sys_type numeric DEFAULT NULL,
+	sys_id numeric DEFAULT NULL,
+	sys_country char DEFAULT NULL,
+	sys_sunrise numeric DEFAULT NULL,
+	sys_sunset numeric DEFAULT NULL,
+	timezone numeric DEFAULT NULL,
+	id numeric DEFAULT NULL,
+	name char DEFAULT NULL,
+	cod numeric DEFAULT NULL,
+	main_sea_level numeric DEFAULT NULL,
+	main_grnd_level	wind_gust numeric DEFAULT NULL,
+);
+
+CREATE TABLE IF NOT EXISTS energy.wind_dev
+(
+	coord_lon numeric DEFAULT NULL,
+	coord_lat numeric DEFAULT NULL,
+	weather_0_id numeric DEFAULT NULL,
+	weather_0_main char DEFAULT NULL,
+	weather_0_description char DEFAULT NULL,
+	weather_0_icon char DEFAULT NULL,
+	base char DEFAULT NULL,
+	main_temp numeric DEFAULT NULL,
+	main_feels_like numeric DEFAULT NULL,
+	main_temp_min numeric DEFAULT NULL,
+	main_temp_max numeric DEFAULT NULL,
+	main_pressure numeric DEFAULT NULL,
+	main_humidity numeric DEFAULT NULL,
+	visibility numeric DEFAULT NULL,
+	wind_speed numeric DEFAULT NULL,
+	wind_deg numeric DEFAULT NULL,
+	clouds_all numeric DEFAULT NULL,
+	dt numeric DEFAULT NULL,
+	sys_type numeric DEFAULT NULL,
+	sys_id numeric DEFAULT NULL,
+	sys_country char DEFAULT NULL,
+	sys_sunrise numeric DEFAULT NULL,
+	sys_sunset numeric DEFAULT NULL,
+	timezone numeric DEFAULT NULL,
+	id numeric DEFAULT NULL,
+	name char DEFAULT NULL,
+	cod numeric DEFAULT NULL,
+	main_sea_level numeric DEFAULT NULL,
+	main_grnd_level	wind_gust numeric DEFAULT NULL,
+);
