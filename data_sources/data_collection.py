@@ -5,6 +5,7 @@ import typing_extensions
 import sys
 from sqlalchemy import create_engine
 import mysql.connector
+from flatten_json import flatten
 
 class get_data():
 
@@ -131,9 +132,9 @@ if __name__ == '__main__':
     #    )
 
     # Gabe's Local DB
-    engine = create_engine(
-        'postgresql+psycopg2://postgres:SwissAmerican2020@localhost/postgres'
-        )
+    #engine = create_engine(
+    #    'postgresql+psycopg2://postgres:SwissAmerican2020@localhost/postgres'
+    #    )
 
     # Fetch energy demand and generation data
     load = get_data('cfc655e7e0bb8f38367dc611a0da9409', '9ea3a7cd842bc24bd99785092ce3342e')
@@ -155,10 +156,36 @@ if __name__ == '__main__':
     print(25*'-', '\n')
     print(solar)
 
-    # Load demand data into DB table
-    energy_demand.to_sql('demand_dev', con=engine, if_exists='replace')
-    
-    # Load energy generation into DB table
+    # hydro
+    hydro = hydro.values()
+    dic_flattened = [flatten(d) for d in hydro]
+    df_hydro = pd.DataFrame(dic_flattened)
+    df_hydro.to_sql('hydro_dev', con=engine, if_exists='replace')
+    query = """select * from hydro_dev"""
+    hydro_data = pd.read_sql_query(query, con=engine)
+    print("---------Hydro Data-------------")
+    print(hydro_data)
 
-    # Load weather data into DB table
+    # solar
+    solar = solar.values()
+    dic_flattened = [flatten(d) for d in solar]
+    df_solar = pd.DataFrame(dic_flattened)
+    df_solar.to_sql('solar_dev', con=engine, if_exists='replace')
+    query = """select * from solar_dev"""
+    solar_data = pd.read_sql_query(query, con=engine)
+    print("---------Solar Data-------------")
+    print(solar_data)
     
+    # Wind
+    wind = wind.values()
+    dic_flattened = [flatten(d) for d in wind]
+    df_wind = pd.DataFrame(dic_flattened)
+    df_wind.to_sql('wind_dev', con=engine, if_exists='replace')
+    query = """select * from wind_dev"""
+    print("---------Wind Data-------------")
+    wind_data = pd.read_sql_query(query, con=engine)
+
+
+    # Load demand and energy generation data into DB table
+    energy_demand.to_sql('demand_dev', con=engine, if_exists='replace')    
+    energy_generation.to_sql('energy_dev', con=engine, if_exists='replace')
