@@ -23,14 +23,12 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 def data_loader(timestamp):
     if timestamp:
         aws_connection = DataFetcher(
-            username = 'postgres',
-            password = 'SwissAmerican2020',
-            endpoint = None,
-            database = 'localhost',
-            port = 5432)
-        engine, connection,metadata = aws_connection.connect()
-        global time_download
-        time_download = time.asctime(time.gmtime())
+            username = 'admin',
+            password = 'energy2021!',
+            endpoint = 'database-1.canx610strnv.us-east-1.rds.amazonaws.com',
+            database = 'energy',
+            port = 3306)
+        engine,connection,metadata = aws_connection.connect()
         return {table:pd.read_sql(f"SELECT * FROM {table}", engine) for table in aws_connection.tables}, list(aws_connection.tables)
 
 # Creates a list of values in html format

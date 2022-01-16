@@ -127,14 +127,9 @@ class get_data():
 if __name__ == '__main__':
 
     # Create an engine to the DB
-    #engine = create_engine(
-    #    'mysql+mysqlconnector://admin:energy2021!@database-1.canx610strnv.us-east-1.rds.amazonaws.com/energy'
-    #    )
-
-    # Gabe's Local DB
-    #engine = create_engine(
-    #    'postgresql+psycopg2://postgres:SwissAmerican2020@localhost/postgres'
-    #    )
+    engine = create_engine(
+        'mysql+mysqlconnector://admin:energy2021!@database-1.canx610strnv.us-east-1.rds.amazonaws.com/energy'
+        )
 
     # Fetch energy demand and generation data
     load = get_data('cfc655e7e0bb8f38367dc611a0da9409', '9ea3a7cd842bc24bd99785092ce3342e')
