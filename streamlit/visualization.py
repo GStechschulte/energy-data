@@ -70,7 +70,7 @@ def create_footer():
     }
     </style>
     <div class="footer">
-    <p>Developed by Bezos Warehousing & Lakes Inc.<a style='display: block; text-align: center;' href="https://github.com/GStechschulte/energy-data" target="_blank">Gabriel Stechulte | Aristide Guldenschuh | Bernardo Freire Barboza da Cruz</a></p>
+    <p>Developed by Bezos Warehousing & Lakes Inc.<a style='display: block; text-align: center;' href="https://github.com/GStechschulte/energy-data" target="_blank">Gabriel Stechschulte | Aristide Guldenschuh | Bernardo Freire Barboza da Cruz</a></p>
     </div>
     """
     return st.markdown(footer,unsafe_allow_html=True)
