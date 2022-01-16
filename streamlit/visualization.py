@@ -12,7 +12,7 @@ from data_fetcher.data_fetcher import DataFetcher
 
 ########## Default settings ##########
 st.set_page_config(
-    page_title = 'Energy Dashboard for western United States by Bezos Warehousing & Lakes',
+    page_title = 'Energy Dashboard for California by Bezos Warehousing & Lakes',
     layout="wide",
     )
 today = time.asctime(time.gmtime())
@@ -23,12 +23,12 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 def data_loader(timestamp):
     if timestamp:
         aws_connection = DataFetcher(
-            username = os.environ.get('aws_rds_username','not found'),
-            password = os.environ.get('aws_rds_pwd','not found'),
-            endpoint = os.environ.get('aws_rds_endpoint','not found'),
-            database = os.environ.get('aws_rds_name','not found'),
-            port = 3306)
-        engine,connection,metadata = aws_connection.connect()
+            username = 'postgres',
+            password = 'SwissAmerican2020',
+            endpoint = None,
+            database = 'localhost',
+            port = 5432)
+        engine, connection,metadata = aws_connection.connect()
         global time_download
         time_download = time.asctime(time.gmtime())
         return {table:pd.read_sql(f"SELECT * FROM {table}", engine) for table in aws_connection.tables}, list(aws_connection.tables)
