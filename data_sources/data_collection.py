@@ -17,10 +17,6 @@ class get_data():
         This function fetches hydro, solar, and wind energy production from the 
         state of California and processes the JSON format into a pandas dataframe
         with respective columns and data types.
-
-        parameters:
-            self:energy_key = api key
-            start = start date to fetch data from
         """
 
         hydro_url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.NG.WAT.H&start={}'.format(
@@ -51,7 +47,9 @@ class get_data():
 
     def energy_demand(self, start):
         """
-        This function. . .
+        This function fetches the energy demand from the 
+        state of California and processes the JSON format into a pandas dataframe
+        with respective columns and data types.
         """
 
         url = 'http://api.eia.gov/series/?api_key={}&series_id=EBA.CAL-ALL.D.H&start={}'.format(self.energy_key, start)
@@ -66,6 +64,10 @@ class get_data():
         return demand
 
     def hydro_weather(self):
+        """
+        This function fetches the weather components from the 
+        areas of California with the largest hydro energy production
+        """
 
         hydro_cities = {'Yosemite Valley': 7262586, 'Tahoe Vista': 5400943, 
                     'Lassen County': 5566544, 'Eldorado': 5947462}
@@ -81,6 +83,10 @@ class get_data():
         return hydro_weather
     
     def wind_weather(self):
+        """
+        This function fetches the weather components from the 
+        areas of California with the largest wind energy production
+        """
 
         wind_cities = {'Mojave': 5373965, 'Tehachapi': 5401297, 
                        'Palm Springs': 5380668, 'Livermore': 5367440,
@@ -97,6 +103,10 @@ class get_data():
         return wind_weather
     
     def solar_weather(self):
+        """
+        This function fetches the weather components from the 
+        areas of California with the largest solar energy production
+        """
 
         solar_cities = {'Calexico': 5332698, 'Los Angeles': 1705545, 
                         'Bakersfield': 5325738, 'Rancho Santa Margarita': 5386082, 
@@ -116,8 +126,13 @@ class get_data():
 if __name__ == '__main__':
 
     # Create an engine to the DB
+    #engine = create_engine(
+    #    'mysql+mysqlconnector://admin:energy2021!@database-1.canx610strnv.us-east-1.rds.amazonaws.com/energy'
+    #    )
+
+    # Gabe's Local DB
     engine = create_engine(
-        'mysql+mysqlconnector://admin:energy2021!@database-1.canx610strnv.us-east-1.rds.amazonaws.com/energy'
+        'postgresql+psycopg2://postgres:SwissAmerican2020@localhost/postgres'
         )
 
     # Fetch energy demand and generation data
@@ -142,4 +157,8 @@ if __name__ == '__main__':
 
     # Load demand data into DB table
     energy_demand.to_sql('demand_dev', con=engine, if_exists='replace')
+    
+    # Load energy generation into DB table
+
+    # Load weather data into DB table
     
