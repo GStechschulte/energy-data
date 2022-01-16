@@ -5,6 +5,7 @@ import typing_extensions
 import sys
 from sqlalchemy import create_engine
 import mysql.connector
+from flatten_json import flatten
 
 class get_data():
 
@@ -140,6 +141,35 @@ if __name__ == '__main__':
     print(25*'-', '\n')
     print(solar)
 
+    #hydro
+    hydro = hydro.values()
+    dic_flattened = [flatten(d) for d in hydro]
+    df_hydro = pd.DataFrame(dic_flattened)
+    df_hydro.to_sql('hydro_dev', con=engine, if_exists='replace')
+    query = """select * from energy.hydro_dev"""
+    hydro_data = pd.read_sql_query(query, con=engine)
+    print("---------Hydro Data-------------")
+    print(hydro_data)
+
+    # solar
+    solar = solar.values()
+    dic_flattened = [flatten(d) for d in solar]
+    df_solar = pd.DataFrame(dic_flattened)
+    df_solar.to_sql('solar_dev', con=engine, if_exists='replace')
+    query = """select * from energy.solar_dev"""
+    solar_data = pd.read_sql_query(query, con=engine)
+    print("---------Solar Data-------------")
+    print(solar_data)
+    #Wind
+
+    wind = wind.values()
+    dic_flattened = [flatten(d) for d in wind]
+    df_wind = pd.DataFrame(dic_flattened)
+    df_wind.to_sql('wind_dev', con=engine, if_exists='replace')
+    query = """select * from energy.wind_dev"""
+    wind_data = pd.read_sql_query(query, con=engine)
+
+
     # Load demand data into DB table
     energy_demand.to_sql('demand_dev', con=engine, if_exists='replace')
-    
+    energy_generation.to_sql('energy_dev', con=engine, if_exists='replace')
