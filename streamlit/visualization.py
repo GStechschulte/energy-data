@@ -1,23 +1,21 @@
-
-import os, sys, json, time
-from os import listdir
-from os.path import isfile, join
+import os
+import time
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-from matplotlib import pyplot as plt
-from PIL import Image
 import altair as alt
+from PIL import Image
 
 from data_fetcher.data_fetcher import DataFetcher
 
-# Get datatime
-today_obj = time.strptime("20 December, 2021","%d %B, %Y")
-today = time.strftime("%d %B %Y", today_obj)
-
 ########## Default settings ##########
+st.set_page_config(
+    page_title = 'Energy Dashboard for western United States by Bezos Warehousing & Lakes',
+    layout="wide",
+    )
+today = time.asctime(time.gmtime())
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
 ########## Defs ##########
@@ -25,12 +23,14 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 def data_loader(timestamp):
     if timestamp:
         aws_connection = DataFetcher(
-            username = 'admin',
-            password = 'energy2021!',
-            endpoint = 'database-1.canx610strnv.us-east-1.rds.amazonaws.com',
-            database = 'energy',
+            username = os.environ.get('aws_rds_username','not found'),
+            password = os.environ.get('aws_rds_pwd','not found'),
+            endpoint = os.environ.get('aws_rds_endpoint','not found'),
+            database = os.environ.get('aws_rds_name','not found'),
             port = 3306)
         engine,connection,metadata = aws_connection.connect()
+        global time_download
+        time_download = time.asctime(time.gmtime())
         return {table:pd.read_sql(f"SELECT * FROM {table}", engine) for table in aws_connection.tables}, list(aws_connection.tables)
 
 # Creates a list of values in html format
@@ -75,39 +75,25 @@ def create_footer():
     """
     return st.markdown(footer,unsafe_allow_html=True)
 
-# create a overview chart 
-def create_overview():
-    for key, value in names_dict.items():
-        st.header(f'Data Visualization: {value}')
-        df_generation = df[key]
-        return st.line_chart(df_generation)
-
 # Rolling mean
 def rolling(i, feature):
     return lambda x: np.around(x[feature].rolling(i).mean())
 
-########## MAIN ##########
+########## Initialization ##########
+# Get data from AWS
 df, tables = data_loader(today)
 
-path_local = os.chdir(os.path.dirname(os.path.abspath(__file__)))
-slides_dir = os.path.join(os.getcwd(),'img','presentation','final_presentation_II')
-slides = sorted([f for f in listdir(slides_dir) if isfile(join(slides_dir, f))])
-
 ###### Energy Overview (Balance)
+# HSLU Logo
 col1, col2 = st.columns([1, 3])
 with col1:
     st.image(Image.open('./img/logo.jpeg'))
-with col2:
-    for slide in slides[:1]:
-        st.image(Image.open(f'{os.path.join(slides_dir,slide)}'), use_column_width=True)
- 
-for slide in slides[1:-1]:
-    st.image(Image.open(f'{os.path.join(slides_dir,slide)}'), use_column_width=True)
 
-# Dashboard starts here
+###### Dashboard starts here
 st.header('Energy Dashboard')
+
 # Rolling mean slider
-rolling_mean = st.slider('Rolling mean value:', 1, round(len(df['generation_dev'][['index']])/2), 1)#round(max_moving_average/2))
+rolling_mean = st.slider('Rolling mean value:', 1, round(len(df['generation_dev'][['index']])/2), 1)
 
 ### Energy Generation
 col1, col2, col3 = st.columns(3)
@@ -138,10 +124,10 @@ with col1:
         )
     
     chart = alt.Chart(df_concat).mark_bar().encode(
-        x="Date",
-        y='sum(Generation)',
-        color="Type")
-    st.altair_chart(chart, use_container_width=True)
+        x = alt.X("Date",scale = alt.Scale()),
+        y = 'sum(Generation)',
+        color = "Type").interactive()
+    st.altair_chart(chart, use_container_width = True)
         
 ### Energy Demand
 with col2:
@@ -176,7 +162,7 @@ with col4:
     st.subheader(f'{text}: Hydro')
     df_generation_dev = (df['generation_dev']
                          .set_index('index')
-                         .drop(columns = ['solar_MWh','wind_MWh']) #['hydro_MWh','solar_MWh','wind_MWh'])
+                         .drop(columns = ['solar_MWh','wind_MWh'])
                          .rolling(rolling_mean).mean()
                          )
     st.bar_chart(df_generation_dev)
@@ -185,7 +171,7 @@ with col5:
     st.subheader(f'{text}: Solar')
     df_generation_dev = (df['generation_dev']
                          .set_index('index')
-                         .drop(columns = ['hydro_MWh','wind_MWh']) #['hydro_MWh','solar_MWh','wind_MWh'])
+                         .drop(columns = ['hydro_MWh','wind_MWh'])
                          .rolling(rolling_mean).mean()
                          )
     st.bar_chart(df_generation_dev)
@@ -194,7 +180,7 @@ with col6:
     st.subheader(f'{text}: Wind')
     df_generation_dev = (df['generation_dev']
                          .set_index('index')
-                         .drop(columns = ['hydro_MWh','solar_MWh']) #['hydro_MWh','solar_MWh','wind_MWh'])
+                         .drop(columns = ['hydro_MWh','solar_MWh'])
                          .rolling(rolling_mean).mean()
                          )
     st.bar_chart(df_generation_dev)    
@@ -235,8 +221,16 @@ with col9:
         [str(element[0]+' | Mostly observed weather condition: '+element[1]) for element in zip(list(df['wind_dev']['name']),list(df['wind_dev']['weather_0_main']))]
         )
   
-for slide in slides[-1:]:
-    st.image(Image.open(f'{os.path.join(slides_dir,slide)}'), use_column_width=True)
-  
+# Show last download time stamp
+st.info(f'Last update of data: {time_download} (UTC)')
+
+# Create a button in order to fetch data
+if st.button('Update data?'):
+    try:
+        data_loader(today)
+        st.success('updated')
+    except:
+        st.error('data download failed')
+
 ### End of the dashboard
 create_footer()
